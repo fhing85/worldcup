@@ -138,6 +138,15 @@
               <button type="submit">행 추가</button>
             </form>
           </section>
+
+          <section class="reset-panel" aria-labelledby="resetTitle">
+            <div>
+              <p class="section-kicker">TEST RESET</p>
+              <h3 id="resetTitle">테스트 데이터 초기화</h3>
+              <p>기본 16개 스코어는 유지하고 등록 이름, 입금 상태, 추가 행을 초기화합니다.</p>
+            </div>
+            <button id="resetButton" type="button">초기화</button>
+          </section>
         </section>
 
         <section class="guide-section">
@@ -170,6 +179,29 @@
     </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <dialog id="resetDialog" class="reset-dialog">
+      <form id="resetForm">
+        <p class="dialog-kicker">RESET DATA</p>
+        <h2>테스트 데이터를 초기화할까요?</h2>
+        <p>초기화 비밀번호를 입력해 주세요.</p>
+        <label>
+          <span class="sr-only">초기화 비밀번호</span>
+          <input
+            name="password"
+            type="password"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="비밀번호"
+            required
+          />
+        </label>
+        <div class="dialog-actions">
+          <button id="cancelReset" type="button" class="button-secondary">돌아가기</button>
+          <button type="submit" class="button-danger">초기화 실행</button>
+        </div>
+      </form>
+    </dialog>
 
     <script src="firebase-config.js"></script>
     <script type="module" src="app.js"></script>

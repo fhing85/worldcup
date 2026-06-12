@@ -14,6 +14,10 @@ const LOCAL_OWNER_KEY = "civil-office-worldcup-owner-v1";
 const elements = {
   scoreGrid: document.querySelector("#scoreGrid"),
   addScoreForm: document.querySelector("#addScoreForm"),
+  resetButton: document.querySelector("#resetButton"),
+  resetDialog: document.querySelector("#resetDialog"),
+  resetForm: document.querySelector("#resetForm"),
+  cancelReset: document.querySelector("#cancelReset"),
   claimedCount: document.querySelector("#claimedCount"),
   paidCount: document.querySelector("#paidCount"),
   availableCount: document.querySelector("#availableCount"),
@@ -124,6 +128,10 @@ function createLocalStorageAdapter() {
       writeLocalState(next);
       return true;
     },
+    async reset() {
+      writeLocalState({ customScores: {}, predictions: {} });
+      return true;
+    },
   };
 }
 
@@ -208,6 +216,9 @@ async function createFirebaseStorageAdapter() {
         return { ...current, paid };
       });
       return result.committed;
+    },
+    async reset() {
+      return false;
     },
   };
 }
@@ -429,6 +440,48 @@ async function handleAddScore(form) {
   }
 }
 
+function openResetDialog() {
+  elements.resetForm.reset();
+  if (typeof elements.resetDialog.showModal === "function") {
+    elements.resetDialog.showModal();
+    elements.resetForm.elements.password.focus();
+  }
+}
+
+async function handleReset(form) {
+  const password = form.elements.password.value;
+  const submitButton = form.querySelector('[type="submit"]');
+
+  if (password !== "12") {
+    showToast("초기화 비밀번호가 맞지 않습니다.", "error");
+    form.elements.password.select();
+    return;
+  }
+
+  if (storage.mode !== "local") {
+    showToast(
+      "공동 저장 데이터는 Firebase 관리자 화면에서 초기화해야 합니다.",
+      "error",
+    );
+    return;
+  }
+
+  submitButton.disabled = true;
+  submitButton.textContent = "초기화 중...";
+
+  try {
+    await storage.reset();
+    elements.resetDialog.close();
+    showToast("테스트 데이터를 초기화했습니다.");
+  } catch (error) {
+    console.error(error);
+    showToast("초기화하지 못했습니다.", "error");
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = "초기화 실행";
+  }
+}
+
 function updateCountdown() {
   const distance = MATCH_TIME.getTime() - Date.now();
   if (distance <= 0) {
@@ -484,6 +537,17 @@ elements.scoreGrid.addEventListener("click", (event) => {
 elements.addScoreForm.addEventListener("submit", (event) => {
   event.preventDefault();
   handleAddScore(event.target);
+});
+
+elements.resetButton.addEventListener("click", openResetDialog);
+
+elements.cancelReset.addEventListener("click", () => {
+  elements.resetDialog.close();
+});
+
+elements.resetForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  handleReset(event.target);
 });
 
 updateCountdown();
