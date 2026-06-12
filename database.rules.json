@@ -12,7 +12,7 @@
       ".write": "auth != null && !newData.exists()",
       "$score": {
         "$participant": {
-          ".write": "auth != null && ((!data.exists() && newData.exists() && newData.child('ownerId').val() == auth.uid) || (data.exists() && data.child('ownerId').val() == auth.uid && (!newData.exists() || newData.child('ownerId').val() == auth.uid)))",
+          ".write": "auth != null && ((!data.exists() && newData.exists() && newData.child('ownerId').val() == auth.uid) || (data.exists() && !newData.exists()) || (data.exists() && data.child('ownerId').val() == auth.uid && newData.child('ownerId').val() == auth.uid))",
           ".validate": "newData.val() == null || (newData.hasChildren(['name', 'paid', 'ownerId', 'claimedAt']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 12 && newData.child('paid').isBoolean() && newData.child('ownerId').val() == auth.uid)"
         }
       }

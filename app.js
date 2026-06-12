@@ -133,7 +133,7 @@ function createLocalStorageAdapter() {
     async cancelEntry(scoreKey, participantId) {
       const next = normalizedLocalState();
       const participant = next.predictions[scoreKey]?.[participantId];
-      if (!participant || participant.ownerId !== ownerId) {
+      if (!participant) {
         return false;
       }
       delete next.predictions[scoreKey][participantId];
@@ -234,19 +234,16 @@ async function createFirebaseStorageAdapter() {
         database,
         `predictions/${scoreKey}/${participantId}`,
       );
-      const result = await databaseModule.runTransaction(target, (current) => {
-        if (!current || current.ownerId !== ownerId) {
-          return;
-        }
-        return null;
-      });
-      return result.committed;
+      await databaseModule.remove(target);
+      return true;
     },
     async reset() {
-      await databaseModule.update(rootRef, {
-        predictions: null,
-        scoreRows: null,
-      });
+      const predictionsRef = databaseModule.ref(database, "predictions");
+      const scoreRowsRef = databaseModule.ref(database, "scoreRows");
+      await Promise.all([
+        databaseModule.remove(predictionsRef),
+        databaseModule.remove(scoreRowsRef),
+      ]);
       return true;
     },
   };
@@ -297,15 +294,20 @@ function participantList(scoreKey) {
 function renderParticipant(participant, scoreKey) {
   const isMine = participant.ownerId === ownerId;
   const statusClass = participant.paid ? "is-paid" : "";
-  const controls = isMine
-    ? `<span class="participant-controls">
-        <button
-          type="button"
-          class="participant-payment ${statusClass}"
-          data-payment="${scoreKey}"
-          data-participant="${participant.id}"
-          data-paid="${participant.paid ? "true" : "false"}"
-        >${participant.paid ? "입금 완료" : "입금 완료하기"}</button>
+  const paymentControl = isMine
+    ? `<button
+        type="button"
+        class="participant-payment ${statusClass}"
+        data-payment="${scoreKey}"
+        data-participant="${participant.id}"
+        data-paid="${participant.paid ? "true" : "false"}"
+      >${participant.paid ? "입금 완료" : "입금 완료하기"}</button>`
+    : `<span class="participant-status ${statusClass}">
+        ${participant.paid ? "입금 완료" : "입금 전"}
+      </span>`;
+
+  const controls = `<span class="participant-controls">
+        ${paymentControl}
         <button
           type="button"
           class="participant-cancel"
@@ -313,9 +315,6 @@ function renderParticipant(participant, scoreKey) {
           data-cancel-participant="${participant.id}"
           data-cancel-name="${escapeHtml(participant.name)}"
         >등록 취소</button>
-      </span>`
-    : `<span class="participant-status ${statusClass}">
-        ${participant.paid ? "입금 완료" : "입금 전"}
       </span>`;
 
   return `
@@ -466,7 +465,7 @@ async function handleCancelEntry(form) {
     showToast(
       success
         ? `${cancelTarget.name}님의 등록을 취소했습니다.`
-        : "본인이 등록한 이름만 취소할 수 있습니다.",
+        : "이미 취소되었거나 등록 정보를 찾을 수 없습니다.",
       success ? "success" : "error",
     );
   } catch (error) {
