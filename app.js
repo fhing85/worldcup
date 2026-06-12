@@ -18,6 +18,9 @@ const elements = {
   resetDialog: document.querySelector("#resetDialog"),
   resetForm: document.querySelector("#resetForm"),
   cancelReset: document.querySelector("#cancelReset"),
+  cancelEntryDialog: document.querySelector("#cancelEntryDialog"),
+  cancelEntryForm: document.querySelector("#cancelEntryForm"),
+  keepEntry: document.querySelector("#keepEntry"),
   claimedCount: document.querySelector("#claimedCount"),
   paidCount: document.querySelector("#paidCount"),
   availableCount: document.querySelector("#availableCount"),
@@ -31,6 +34,7 @@ let state = { customScores: {}, predictions: {} };
 let ownerId = "";
 let storage = null;
 let toastTimer = null;
+let cancelTarget = null;
 
 function hasFirebaseConfig() {
   const config = window.FIREBASE_CONFIG;
@@ -126,6 +130,19 @@ function createLocalStorageAdapter() {
       writeLocalState(next);
       return true;
     },
+    async cancelEntry(scoreKey, participantId) {
+      const next = normalizedLocalState();
+      const participant = next.predictions[scoreKey]?.[participantId];
+      if (!participant || participant.ownerId !== ownerId) {
+        return false;
+      }
+      delete next.predictions[scoreKey][participantId];
+      if (Object.keys(next.predictions[scoreKey]).length === 0) {
+        delete next.predictions[scoreKey];
+      }
+      writeLocalState(next);
+      return true;
+    },
     async reset() {
       writeLocalState({ customScores: {}, predictions: {} });
       return true;
@@ -212,8 +229,25 @@ async function createFirebaseStorageAdapter() {
       });
       return result.committed;
     },
+    async cancelEntry(scoreKey, participantId) {
+      const target = databaseModule.ref(
+        database,
+        `predictions/${scoreKey}/${participantId}`,
+      );
+      const result = await databaseModule.runTransaction(target, (current) => {
+        if (!current || current.ownerId !== ownerId) {
+          return;
+        }
+        return null;
+      });
+      return result.committed;
+    },
     async reset() {
-      return false;
+      await databaseModule.update(rootRef, {
+        predictions: null,
+        scoreRows: null,
+      });
+      return true;
     },
   };
 }
@@ -263,14 +297,23 @@ function participantList(scoreKey) {
 function renderParticipant(participant, scoreKey) {
   const isMine = participant.ownerId === ownerId;
   const statusClass = participant.paid ? "is-paid" : "";
-  const button = isMine
-    ? `<button
-        type="button"
-        class="participant-payment ${statusClass}"
-        data-payment="${scoreKey}"
-        data-participant="${participant.id}"
-        data-paid="${participant.paid ? "true" : "false"}"
-      >${participant.paid ? "입금 완료" : "입금 완료하기"}</button>`
+  const controls = isMine
+    ? `<span class="participant-controls">
+        <button
+          type="button"
+          class="participant-payment ${statusClass}"
+          data-payment="${scoreKey}"
+          data-participant="${participant.id}"
+          data-paid="${participant.paid ? "true" : "false"}"
+        >${participant.paid ? "입금 완료" : "입금 완료하기"}</button>
+        <button
+          type="button"
+          class="participant-cancel"
+          data-cancel-score="${scoreKey}"
+          data-cancel-participant="${participant.id}"
+          data-cancel-name="${escapeHtml(participant.name)}"
+        >등록 취소</button>
+      </span>`
     : `<span class="participant-status ${statusClass}">
         ${participant.paid ? "입금 완료" : "입금 전"}
       </span>`;
@@ -278,7 +321,7 @@ function renderParticipant(participant, scoreKey) {
   return `
     <li class="participant ${statusClass}">
       <span class="participant-name">${escapeHtml(participant.name)}</span>
-      ${button}
+      ${controls}
     </li>
   `;
 }
@@ -395,6 +438,47 @@ async function handlePayment(button) {
   }
 }
 
+function openCancelEntryDialog(button) {
+  cancelTarget = {
+    scoreKey: button.dataset.cancelScore,
+    participantId: button.dataset.cancelParticipant,
+    name: button.dataset.cancelName,
+  };
+  elements.cancelEntryDialog.querySelector("h2").textContent =
+    `${cancelTarget.name}님의 등록을 취소할까요?`;
+  elements.cancelEntryDialog.showModal();
+}
+
+async function handleCancelEntry(form) {
+  if (!cancelTarget) {
+    return;
+  }
+  const submitButton = form.querySelector('[type="submit"]');
+  submitButton.disabled = true;
+  submitButton.textContent = "취소 중...";
+
+  try {
+    const success = await storage.cancelEntry(
+      cancelTarget.scoreKey,
+      cancelTarget.participantId,
+    );
+    elements.cancelEntryDialog.close();
+    showToast(
+      success
+        ? `${cancelTarget.name}님의 등록을 취소했습니다.`
+        : "본인이 등록한 이름만 취소할 수 있습니다.",
+      success ? "success" : "error",
+    );
+  } catch (error) {
+    console.error(error);
+    showToast("등록을 취소하지 못했습니다.", "error");
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = "등록 취소";
+    cancelTarget = null;
+  }
+}
+
 async function handleAddScore(form) {
   const home = Number(form.elements.homeScore.value);
   const away = Number(form.elements.awayScore.value);
@@ -451,14 +535,6 @@ async function handleReset(form) {
   if (password !== "12") {
     showToast("초기화 비밀번호가 맞지 않습니다.", "error");
     form.elements.password.select();
-    return;
-  }
-
-  if (storage.mode !== "local") {
-    showToast(
-      "공동 저장 데이터는 Firebase 관리자 화면에서 초기화해야 합니다.",
-      "error",
-    );
     return;
   }
 
@@ -542,6 +618,12 @@ elements.scoreGrid.addEventListener("click", (event) => {
   const paymentButton = event.target.closest("[data-payment]");
   if (paymentButton) {
     handlePayment(paymentButton);
+    return;
+  }
+
+  const cancelButton = event.target.closest("[data-cancel-participant]");
+  if (cancelButton) {
+    openCancelEntryDialog(cancelButton);
   }
 });
 
@@ -559,6 +641,16 @@ elements.cancelReset.addEventListener("click", () => {
 elements.resetForm.addEventListener("submit", (event) => {
   event.preventDefault();
   handleReset(event.target);
+});
+
+elements.keepEntry.addEventListener("click", () => {
+  cancelTarget = null;
+  elements.cancelEntryDialog.close();
+});
+
+elements.cancelEntryForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  handleCancelEntry(event.target);
 });
 
 updateCountdown();

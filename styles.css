@@ -661,9 +661,32 @@ main {
   padding: 0 9px;
 }
 
+.participant-controls {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 5px;
+  align-items: center;
+}
+
 .participant-payment {
   color: white;
   background: var(--navy);
+}
+
+.participant-cancel {
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid #d5a7aa;
+  border-radius: 999px;
+  color: #a53d44;
+  background: white;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.participant-cancel:hover {
+  color: white;
+  background: #a82931;
 }
 
 .participant-payment:hover {
@@ -1160,6 +1183,19 @@ footer strong {
 
   .score-card {
     min-height: 218px;
+  }
+
+  .participant {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .participant-controls {
+    width: 100%;
+  }
+
+  .participant-controls button {
+    flex: 1;
   }
 
   .add-score-panel {
