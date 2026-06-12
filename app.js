@@ -106,10 +106,8 @@ function createLocalStorageAdapter() {
     async register(scoreKey, name) {
       const next = normalizedLocalState();
       next.predictions[scoreKey] ||= {};
-      if (next.predictions[scoreKey][ownerId]) {
-        return false;
-      }
-      next.predictions[scoreKey][ownerId] = {
+      const participantId = crypto.randomUUID();
+      next.predictions[scoreKey][participantId] = {
         name,
         paid: false,
         ownerId,
@@ -118,13 +116,13 @@ function createLocalStorageAdapter() {
       writeLocalState(next);
       return true;
     },
-    async setPaid(scoreKey, paid) {
+    async setPaid(scoreKey, participantId, paid) {
       const next = normalizedLocalState();
-      const participant = next.predictions[scoreKey]?.[ownerId];
-      if (!participant) {
+      const participant = next.predictions[scoreKey]?.[participantId];
+      if (!participant || participant.ownerId !== ownerId) {
         return false;
       }
-      next.predictions[scoreKey][ownerId] = { ...participant, paid };
+      next.predictions[scoreKey][participantId] = { ...participant, paid };
       writeLocalState(next);
       return true;
     },
@@ -187,27 +185,20 @@ async function createFirebaseStorageAdapter() {
       return result.committed;
     },
     async register(scoreKey, name) {
-      const target = databaseModule.ref(
-        database,
-        `predictions/${scoreKey}/${ownerId}`,
-      );
-      const result = await databaseModule.runTransaction(target, (current) => {
-        if (current) {
-          return;
-        }
-        return {
-          name,
-          paid: false,
-          ownerId,
-          claimedAt: databaseModule.serverTimestamp(),
-        };
+      const scoreRef = databaseModule.ref(database, `predictions/${scoreKey}`);
+      const target = databaseModule.push(scoreRef);
+      await databaseModule.set(target, {
+        name,
+        paid: false,
+        ownerId,
+        claimedAt: databaseModule.serverTimestamp(),
       });
-      return result.committed;
+      return true;
     },
-    async setPaid(scoreKey, paid) {
+    async setPaid(scoreKey, participantId, paid) {
       const target = databaseModule.ref(
         database,
-        `predictions/${scoreKey}/${ownerId}`,
+        `predictions/${scoreKey}/${participantId}`,
       );
       const result = await databaseModule.runTransaction(target, (current) => {
         if (!current || current.ownerId !== ownerId) {
@@ -252,13 +243,14 @@ function allScores() {
 }
 
 function participantList(scoreKey) {
-  return Object.values(state.predictions[scoreKey] || {})
+  return Object.entries(state.predictions[scoreKey] || {})
     .filter(
-      (participant) =>
+      ([, participant]) =>
         participant &&
         typeof participant === "object" &&
         typeof participant.name === "string",
     )
+    .map(([id, participant]) => ({ ...participant, id }))
     .sort(
       (a, b) => Number(a.claimedAt || 0) - Number(b.claimedAt || 0),
     );
@@ -272,6 +264,7 @@ function renderParticipant(participant, scoreKey) {
         type="button"
         class="participant-payment ${statusClass}"
         data-payment="${scoreKey}"
+        data-participant="${participant.id}"
         data-paid="${participant.paid ? "true" : "false"}"
       >${participant.paid ? "입금 완료" : "입금 완료하기"}</button>`
     : `<span class="participant-status ${statusClass}">
@@ -298,7 +291,6 @@ function render() {
   elements.scoreGrid.innerHTML = scores
     .map((score) => {
       const people = participantList(score.key);
-      const myEntry = people.find((person) => person.ownerId === ownerId);
 
       return `
         <article class="score-card ${people.length ? "has-participants" : ""}" data-score="${score.key}">
@@ -313,24 +305,20 @@ function render() {
                   .join("")}</ul>`
               : `<p class="empty-participants">아직 참여자가 없습니다.</p>`
           }
-          ${
-            myEntry
-              ? `<p class="already-joined">이 스코어에 등록되었습니다.</p>`
-              : `<form class="claim-form" data-score="${score.key}">
-                  <label class="sr-only" for="name-${score.key}">이름</label>
-                  <input
-                    id="name-${score.key}"
-                    class="name-input"
-                    name="name"
-                    type="text"
-                    maxlength="12"
-                    placeholder="이름을 입력하세요"
-                    autocomplete="name"
-                    required
-                  />
-                  <button class="claim-button" type="submit">이 스코어에 등록</button>
-                </form>`
-          }
+          <form class="claim-form" data-score="${score.key}">
+            <label class="sr-only" for="name-${score.key}">이름</label>
+            <input
+              id="name-${score.key}"
+              class="name-input"
+              name="name"
+              type="text"
+              maxlength="12"
+              placeholder="이름을 입력하세요"
+              autocomplete="name"
+              required
+            />
+            <button class="claim-button" type="submit">이 스코어에 참여</button>
+          </form>
         </article>
       `;
     })
@@ -366,7 +354,7 @@ async function handleRegistration(form) {
     showToast(
       success
         ? `${name}님의 예상이 등록되었습니다.`
-        : "이 기기에서는 해당 스코어에 이미 등록했습니다.",
+        : "등록하지 못했습니다.",
       success ? "success" : "error",
     );
   } catch (error) {
@@ -374,7 +362,7 @@ async function handleRegistration(form) {
     showToast("등록하지 못했습니다. 잠시 후 다시 시도해 주세요.", "error");
     button.disabled = false;
     input.disabled = false;
-    button.textContent = "이 스코어에 등록";
+    button.textContent = "이 스코어에 참여";
   }
 }
 
@@ -383,7 +371,11 @@ async function handlePayment(button) {
   button.disabled = true;
 
   try {
-    const success = await storage.setPaid(button.dataset.payment, nextPaid);
+    const success = await storage.setPaid(
+      button.dataset.payment,
+      button.dataset.participant,
+      nextPaid,
+    );
     showToast(
       success
         ? nextPaid
