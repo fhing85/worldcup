@@ -325,6 +325,58 @@ function renderParticipant(participant, scoreKey) {
   `;
 }
 
+function renderScoreCard(score) {
+  const people = participantList(score.key);
+
+  return `
+    <article class="score-card ${people.length ? "has-participants" : ""}" data-score="${score.key}">
+      <div class="card-top">
+        <div class="score-number">${score.home}<i>:</i>${score.away}</div>
+        <span class="status-tag">${people.length}명 참여</span>
+      </div>
+      ${
+        people.length
+          ? `<ul class="participant-list">${people
+              .map((person) => renderParticipant(person, score.key))
+              .join("")}</ul>`
+          : `<p class="empty-participants">아직 참여자가 없습니다.</p>`
+      }
+      <form class="claim-form" data-score="${score.key}">
+        <label class="sr-only" for="name-${score.key}">이름</label>
+        <input
+          id="name-${score.key}"
+          class="name-input"
+          name="name"
+          type="text"
+          maxlength="12"
+          placeholder="이름을 입력하세요"
+          autocomplete="name"
+          required
+        />
+        <button class="claim-button" type="submit">이 스코어에 등록</button>
+      </form>
+    </article>
+  `;
+}
+
+function renderScoreGroup(type, title, description, scores) {
+  return `
+    <section class="result-group result-group-${type}" aria-labelledby="group-${type}">
+      <header class="result-group-header">
+        <div class="result-group-mark" aria-hidden="true"></div>
+        <div>
+          <p>${description}</p>
+          <h3 id="group-${type}">${title}</h3>
+        </div>
+        <span class="result-group-count">${scores.length}개 스코어</span>
+      </header>
+      <div class="result-score-grid">
+        ${scores.map(renderScoreCard).join("")}
+      </div>
+    </section>
+  `;
+}
+
 function render() {
   const scores = allScores();
   const participants = scores.flatMap((score) => participantList(score.key));
@@ -334,41 +386,30 @@ function render() {
   elements.paidCount.textContent = paid.length;
   elements.availableCount.textContent = scores.length;
 
-  elements.scoreGrid.innerHTML = scores
-    .map((score) => {
-      const people = participantList(score.key);
+  const koreaWins = scores.filter((score) => score.home > score.away);
+  const draws = scores.filter((score) => score.home === score.away);
+  const mexicoWins = scores.filter((score) => score.home < score.away);
 
-      return `
-        <article class="score-card ${people.length ? "has-participants" : ""}" data-score="${score.key}">
-          <div class="card-top">
-            <div class="score-number">${score.home}<i>:</i>${score.away}</div>
-            <span class="status-tag">${people.length}명 참여</span>
-          </div>
-          ${
-            people.length
-              ? `<ul class="participant-list">${people
-                  .map((person) => renderParticipant(person, score.key))
-                  .join("")}</ul>`
-              : `<p class="empty-participants">아직 참여자가 없습니다.</p>`
-          }
-          <form class="claim-form" data-score="${score.key}">
-            <label class="sr-only" for="name-${score.key}">이름</label>
-            <input
-              id="name-${score.key}"
-              class="name-input"
-              name="name"
-              type="text"
-              maxlength="12"
-              placeholder="이름을 입력하세요"
-              autocomplete="name"
-              required
-            />
-            <button class="claim-button" type="submit">이 스코어에 등록</button>
-          </form>
-        </article>
-      `;
-    })
-    .join("");
+  elements.scoreGrid.innerHTML = [
+    renderScoreGroup(
+      "korea",
+      "대한민국이 이긴다",
+      "대한민국의 득점이 더 높은 예상",
+      koreaWins,
+    ),
+    renderScoreGroup(
+      "draw",
+      "비긴다",
+      "대한민국과 멕시코의 득점이 같은 예상",
+      draws,
+    ),
+    renderScoreGroup(
+      "mexico",
+      "멕시코가 이긴다",
+      "멕시코의 득점이 더 높은 예상",
+      mexicoWins,
+    ),
+  ].join("");
 }
 
 function showToast(message, type = "success") {
