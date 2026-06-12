@@ -157,14 +157,18 @@ async function createFirebaseStorageAdapter() {
 
   return {
     mode: "firebase",
-    subscribe(callback) {
-      databaseModule.onValue(rootRef, (snapshot) => {
-        const value = snapshot.val() || {};
-        callback({
-          customScores: value.scoreRows || {},
-          predictions: value.predictions || {},
-        });
-      });
+    subscribe(callback, onError) {
+      databaseModule.onValue(
+        rootRef,
+        (snapshot) => {
+          const value = snapshot.val() || {};
+          callback({
+            customScores: value.scoreRows || {},
+            predictions: value.predictions || {},
+          });
+        },
+        (error) => onError?.(error),
+      );
     },
     async addScore(score) {
       if (DEFAULT_SCORES.some((item) => item.key === score.key)) {
@@ -492,8 +496,7 @@ async function initialize() {
   try {
     if (hasFirebaseConfig()) {
       storage = await createFirebaseStorageAdapter();
-      elements.connectionLabel.textContent = "실시간 공동 저장";
-      elements.livePill.classList.add("online");
+      elements.connectionLabel.textContent = "공동 저장 연결 중";
     } else {
       storage = createLocalStorageAdapter();
       elements.connectionLabel.textContent = "이 기기 데모 저장";
@@ -505,10 +508,26 @@ async function initialize() {
     showToast("공동 저장 연결에 실패해 데모 모드로 시작합니다.", "error");
   }
 
-  storage.subscribe((nextState) => {
-    state = nextState;
-    render();
-  });
+  render();
+  storage.subscribe(
+    (nextState) => {
+      state = nextState;
+      if (storage.mode === "firebase") {
+        elements.connectionLabel.textContent = "실시간 공동 저장";
+        elements.livePill.classList.add("online");
+      }
+      render();
+    },
+    (error) => {
+      console.error(error);
+      elements.connectionLabel.textContent = "공동 저장 권한 오류";
+      elements.livePill.classList.remove("online");
+      showToast(
+        "Firebase Realtime Database 규칙을 확인해 주세요.",
+        "error",
+      );
+    },
+  );
 }
 
 elements.scoreGrid.addEventListener("submit", (event) => {
