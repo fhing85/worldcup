@@ -317,7 +317,7 @@ function render() {
               autocomplete="name"
               required
             />
-            <button class="claim-button" type="submit">이 스코어에 참여</button>
+            <button class="claim-button" type="submit">이 스코어에 등록</button>
           </form>
         </article>
       `;
@@ -362,7 +362,7 @@ async function handleRegistration(form) {
     showToast("등록하지 못했습니다. 잠시 후 다시 시도해 주세요.", "error");
     button.disabled = false;
     input.disabled = false;
-    button.textContent = "이 스코어에 참여";
+    button.textContent = "이 스코어에 등록";
   }
 }
 
