@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="토목사업소 대한민국 대 멕시코 경기 결과 예측"
+    />
+    <title>대한민국 vs 멕시코 | 결과 예측</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <nav class="topbar" aria-label="상단 정보">
+          <div class="department-mark">
+            <span class="mark-lines" aria-hidden="true"></span>
+            <span>토목사업소</span>
+          </div>
+          <div class="live-pill">
+            <span class="live-dot" aria-hidden="true"></span>
+            <span id="connectionLabel">저장 방식 확인 중</span>
+          </div>
+        </nav>
+
+        <div class="hero-content">
+          <p class="eyebrow">2026 월드컵 조별예선 · 부서 이벤트</p>
+          <h1>우리의 예측,<br /><span>하나의 스코어</span></h1>
+          <p class="hero-copy">
+            대한민국과 멕시코의 최종 스코어를 예상하고<br class="desktop-only" />
+            아직 비어 있는 한 칸을 선택해 주세요.
+          </p>
+
+          <div class="match-card">
+            <div class="team">
+              <div class="flag flag-korea" aria-label="대한민국 국기">
+                <span class="taegeuk"></span>
+              </div>
+              <div>
+                <strong>대한민국</strong>
+                <span>KOREA REPUBLIC</span>
+              </div>
+            </div>
+
+            <div class="versus">
+              <span>2026. 06. 19. 금</span>
+              <strong>10:00</strong>
+              <em>VS</em>
+            </div>
+
+            <div class="team team-away">
+              <div class="flag flag-mexico" aria-label="멕시코 국기">
+                <i></i><i></i><i></i>
+              </div>
+              <div>
+                <strong>멕시코</strong>
+                <span>MEXICO</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="countdown-panel" aria-live="polite">
+            <span class="countdown-label">경기 시작까지</span>
+            <div id="countdown" class="countdown">계산 중...</div>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section class="account-notice" aria-labelledby="accountTitle">
+          <div class="account-icon" aria-hidden="true">₩</div>
+          <div>
+            <p class="section-kicker">PAYMENT INFORMATION</p>
+            <h2 id="accountTitle">입금 계좌 안내</h2>
+            <p>참여 등록 후 아래 계좌로 입금해 주세요.</p>
+          </div>
+          <dl>
+            <div>
+              <dt>은행명</dt>
+              <dd>우리은행</dd>
+            </div>
+            <div>
+              <dt>계좌번호</dt>
+              <dd>1002434218021</dd>
+            </div>
+            <div>
+              <dt>예금주</dt>
+              <dd>서0호</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="prediction-section" aria-labelledby="predictionTitle">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">SCORE PREDICTION</p>
+              <h2 id="predictionTitle">예상 스코어 선택</h2>
+              <p>같은 스코어에도 여러 사람이 참여할 수 있습니다.</p>
+            </div>
+            <div class="summary" aria-label="참여 현황">
+              <div>
+                <strong id="claimedCount">0</strong>
+                <span>참여</span>
+              </div>
+              <div>
+                <strong id="paidCount">0</strong>
+                <span>입금 완료</span>
+              </div>
+              <div>
+                <strong id="availableCount">16</strong>
+                <span>스코어 행</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="legend">
+            <span><i class="legend-dot available"></i>참여 가능</span>
+            <span><i class="legend-dot claimed"></i>참여자 등록</span>
+            <span><i class="legend-dot paid"></i>입금 완료</span>
+          </div>
+
+          <div id="scoreGrid" class="score-grid" aria-live="polite"></div>
+
+          <section class="add-score-panel" aria-labelledby="addScoreTitle">
+            <div>
+              <p class="section-kicker">ADD SCORE ROW</p>
+              <h3 id="addScoreTitle">원하는 예상치가 없나요?</h3>
+              <p>새 예상 스코어 행을 추가할 수 있습니다. 추가된 행은 삭제되지 않습니다.</p>
+            </div>
+            <form id="addScoreForm" class="add-score-form">
+              <label>
+                <span>대한민국</span>
+                <input
+                  name="homeScore"
+                  type="number"
+                  min="0"
+                  max="99"
+                  inputmode="numeric"
+                  required
+                />
+              </label>
+              <b>:</b>
+              <label>
+                <span>멕시코</span>
+                <input
+                  name="awayScore"
+                  type="number"
+                  min="0"
+                  max="99"
+                  inputmode="numeric"
+                  required
+                />
+              </label>
+              <button type="submit">행 추가</button>
+            </form>
+          </section>
+        </section>
+
+        <section class="guide-section">
+          <p class="section-kicker">HOW TO JOIN</p>
+          <h2>참여 방법</h2>
+          <div class="guide-grid">
+            <article>
+              <span>01</span>
+              <h3>스코어 고르기</h3>
+              <p>원하는 예상 스코어를 고릅니다. 같은 칸에 여러 명이 참여할 수 있습니다.</p>
+            </article>
+            <article>
+              <span>02</span>
+              <h3>이름 등록하기</h3>
+              <p>본인 이름을 입력하고 등록 버튼을 누릅니다.</p>
+            </article>
+            <article>
+              <span>03</span>
+              <h3>입금 체크하기</h3>
+              <p>입금 후 본인 이름 옆 버튼을 누르면 초록색으로 표시됩니다.</p>
+            </article>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <strong>토목사업소</strong>
+        <span>함께 예측하고, 함께 응원합니다.</span>
+      </footer>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="firebase-config.js"></script>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

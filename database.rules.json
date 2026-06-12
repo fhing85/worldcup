@@ -1,0 +1,19 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    "scoreRows": {
+      "$score": {
+        ".write": "auth != null && !data.exists() && newData.exists() && newData.child('createdBy').val() == auth.uid",
+        ".validate": "newData.hasChildren(['home', 'away', 'createdAt', 'createdBy']) && newData.child('home').isNumber() && newData.child('home').val() >= 0 && newData.child('home').val() <= 99 && newData.child('away').isNumber() && newData.child('away').val() >= 0 && newData.child('away').val() <= 99"
+      }
+    },
+    "predictions": {
+      "$score": {
+        "$user": {
+          ".write": "auth != null && $user == auth.uid && ((!data.exists() && newData.exists()) || (data.exists() && newData.exists() && data.child('ownerId').val() == auth.uid && newData.child('ownerId').val() == auth.uid))",
+          ".validate": "newData.hasChildren(['name', 'paid', 'ownerId', 'claimedAt']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 12 && newData.child('paid').isBoolean() && newData.child('ownerId').val() == auth.uid"
+        }
+      }
+    }
+  }
+}
