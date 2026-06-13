@@ -11,7 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800;900&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20260613-22" />
+    <link rel="stylesheet" href="styles.css?v=20260613-23" />
   </head>
   <body>
     <main class="app">
@@ -26,10 +26,12 @@
           <strong>멕시코</strong>
         </div>
         <div class="status-board">
-          <span>참가 인원</span>
+          <span>참여인원수</span>
           <strong id="claimedCount">0</strong>
           <span>명</span>
-          <span class="score-count">스코어 <b id="availableCount">16</b>개</span>
+          <span class="score-count">
+            참여된 스코어보드수 <b id="participatedScoreCount">0</b>개
+          </span>
         </div>
       </header>
 
@@ -74,7 +76,7 @@
         </button>
       </section>
 
-      <footer>토목사업소(시설개량팀) · v22</footer>
+      <footer>토목사업소(시설개량팀) · v23</footer>
     </main>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -135,7 +137,7 @@
       </form>
     </dialog>
 
-    <script src="firebase-config.js?v=20260613-22"></script>
-    <script type="module" src="app.js?v=20260613-22"></script>
+    <script src="firebase-config.js?v=20260613-23"></script>
+    <script type="module" src="app.js?v=20260613-23"></script>
   </body>
 </html>

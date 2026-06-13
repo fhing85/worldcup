@@ -25,7 +25,7 @@ const elements = {
   registerScore: document.querySelector("#registerScore"),
   cancelRegister: document.querySelector("#cancelRegister"),
   claimedCount: document.querySelector("#claimedCount"),
-  availableCount: document.querySelector("#availableCount"),
+  participatedScoreCount: document.querySelector("#participatedScoreCount"),
   connectionLabel: document.querySelector("#connectionLabel"),
   toast: document.querySelector("#toast"),
 };
@@ -342,9 +342,12 @@ function renderScoreGroup(type, title, description, scores) {
 function render() {
   const scores = allScores();
   const participants = scores.flatMap((score) => participantList(score.key));
+  const participatedScores = scores.filter(
+    (score) => participantList(score.key).length > 0,
+  );
 
   elements.claimedCount.textContent = participants.length;
-  elements.availableCount.textContent = scores.length;
+  elements.participatedScoreCount.textContent = participatedScores.length;
 
   const koreaWins = scores.filter((score) => score.home > score.away);
   const draws = scores.filter((score) => score.home === score.away);

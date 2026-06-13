@@ -103,6 +103,11 @@ button {
   border-left: 1px solid rgba(255, 255, 255, 0.18);
 }
 
+.score-count b {
+  color: #7ec5f5;
+  font-size: 22px;
+}
+
 .score-sections {
   display: grid;
   gap: 12px;
