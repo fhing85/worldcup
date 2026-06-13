@@ -292,23 +292,25 @@ function renderScoreCard(score) {
 
   return `
     <article class="score-card" data-score="${score.key}">
-      <button
-        type="button"
-        class="score-button ${people.length ? "has-participants" : ""}"
-        data-register-score="${score.key}"
-        data-register-home="${score.home}"
-        data-register-away="${score.away}"
-      >
-        ${score.home} : ${score.away}
-        <small>${people.length ? `${people.length}명 참여` : "이름 등록"}</small>
-      </button>
-      ${
-        people.length
-          ? `<ul class="participant-list">${people
-              .map((person) => renderParticipant(person, score.key))
-              .join("")}</ul>`
-          : ""
-      }
+      <div class="score-button ${people.length ? "has-participants" : ""}">
+        <button
+          type="button"
+          class="score-select"
+          data-register-score="${score.key}"
+          data-register-home="${score.home}"
+          data-register-away="${score.away}"
+        >
+          <strong>${score.home} : ${score.away}</strong>
+          <small>${people.length ? `${people.length}명 참여` : "이름 등록"}</small>
+        </button>
+        ${
+          people.length
+            ? `<ul class="participant-list">${people
+                .map((person) => renderParticipant(person, score.key))
+                .join("")}</ul>`
+            : ""
+        }
+      </div>
     </article>
   `;
 }

@@ -153,7 +153,7 @@ button {
 }
 
 .result-group-korea .result-group-mark {
-  background: var(--blue);
+  background: var(--red);
 }
 
 .result-group-draw .result-group-mark {
@@ -161,7 +161,7 @@ button {
 }
 
 .result-group-mexico .result-group-mark {
-  background: var(--red);
+  background: #178447;
 }
 
 .result-score-grid {
@@ -182,13 +182,21 @@ button {
   border-radius: 11px;
   color: var(--navy);
   background: #f7f9fa;
+  overflow: hidden;
+}
+
+.score-select {
+  width: 100%;
+  padding: 8px 5px 6px;
+  border: 0;
+  color: inherit;
+  background: transparent;
   font-size: 21px;
   font-weight: 900;
   letter-spacing: -0.05em;
 }
 
-.score-button:hover,
-.score-button:focus-visible {
+.score-button:focus-within {
   border-color: var(--blue);
   background: #eaf4fb;
   outline: none;
@@ -210,7 +218,11 @@ button {
   background: #178447;
 }
 
-.score-button small {
+.score-select strong {
+  display: block;
+}
+
+.score-select small {
   display: block;
   margin-top: 1px;
   font-size: 8px;
@@ -221,8 +233,11 @@ button {
 .participant-list {
   display: grid;
   gap: 3px;
-  margin: 5px 0 0;
-  padding: 0;
+  max-height: 70px;
+  margin: 0;
+  padding: 5px 4px 6px;
+  overflow-y: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
   list-style: none;
 }
 
@@ -236,7 +251,7 @@ button {
 
 .participant-name {
   overflow: hidden;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.92);
   font-size: 9px;
   font-weight: 700;
   text-overflow: ellipsis;
@@ -252,8 +267,8 @@ button {
   place-items: center;
   border: 0;
   border-radius: 50%;
-  color: white;
-  background: #aab1b7;
+  color: var(--navy);
+  background: rgba(255, 255, 255, 0.78);
   font-size: 10px;
   line-height: 1;
 }
