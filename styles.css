@@ -570,10 +570,20 @@ main {
   gap: 12px;
   padding: 2px 2px 10px;
   overflow-x: auto;
+  overflow-y: hidden;
   overscroll-behavior-inline: contain;
   scroll-padding-inline: 2px;
   scroll-snap-type: x proximity;
   scrollbar-width: none;
+  touch-action: pan-x pinch-zoom;
+  -webkit-overflow-scrolling: touch;
+  cursor: grab;
+}
+
+.result-score-grid[data-dragging="true"] {
+  cursor: grabbing;
+  scroll-snap-type: none;
+  user-select: none;
 }
 
 .result-score-grid::-webkit-scrollbar {

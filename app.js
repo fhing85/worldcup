@@ -380,6 +380,71 @@ function updateScrollProgress(scroller) {
 function initializeGroupScrollers() {
   elements.scoreGrid.querySelectorAll("[data-score-scroll]").forEach((scroller) => {
     updateScrollProgress(scroller);
+    if (scroller.dataset.scrollReady === "true") {
+      return;
+    }
+    scroller.dataset.scrollReady = "true";
+
+    scroller.addEventListener(
+      "wheel",
+      (event) => {
+        const maxScroll = scroller.scrollWidth - scroller.clientWidth;
+        if (maxScroll <= 0) {
+          return;
+        }
+
+        const delta =
+          Math.abs(event.deltaX) > Math.abs(event.deltaY)
+            ? event.deltaX
+            : event.deltaY;
+        const movingLeft = delta < 0 && scroller.scrollLeft > 0;
+        const movingRight = delta > 0 && scroller.scrollLeft < maxScroll;
+
+        if (movingLeft || movingRight) {
+          event.preventDefault();
+          scroller.scrollLeft += delta;
+        }
+      },
+      { passive: false },
+    );
+
+    let dragStartX = 0;
+    let dragStartScroll = 0;
+
+    scroller.addEventListener("pointerdown", (event) => {
+      if (
+        event.pointerType !== "mouse" ||
+        event.button !== 0 ||
+        event.target.closest("button, input, label")
+      ) {
+        return;
+      }
+      dragStartX = event.clientX;
+      dragStartScroll = scroller.scrollLeft;
+      scroller.dataset.dragging = "true";
+      scroller.setPointerCapture(event.pointerId);
+    });
+
+    scroller.addEventListener("pointermove", (event) => {
+      if (scroller.dataset.dragging !== "true") {
+        return;
+      }
+      event.preventDefault();
+      scroller.scrollLeft = dragStartScroll - (event.clientX - dragStartX);
+    });
+
+    const stopDragging = (event) => {
+      if (scroller.dataset.dragging !== "true") {
+        return;
+      }
+      scroller.dataset.dragging = "false";
+      if (scroller.hasPointerCapture(event.pointerId)) {
+        scroller.releasePointerCapture(event.pointerId);
+      }
+    };
+
+    scroller.addEventListener("pointerup", stopDragging);
+    scroller.addEventListener("pointercancel", stopDragging);
   });
 }
 
