@@ -200,6 +200,16 @@ button {
   background: var(--navy);
 }
 
+.result-group-korea .score-button.has-participants {
+  border-color: var(--red);
+  background: var(--red);
+}
+
+.result-group-mexico .score-button.has-participants {
+  border-color: #178447;
+  background: #178447;
+}
+
 .score-button small {
   display: block;
   margin-top: 1px;
