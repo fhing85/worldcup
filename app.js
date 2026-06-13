@@ -410,6 +410,10 @@ function initializeGroupScrollers() {
 
     let dragStartX = 0;
     let dragStartScroll = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartScroll = 0;
+    let horizontalTouch = false;
 
     scroller.addEventListener("pointerdown", (event) => {
       if (
@@ -445,6 +449,80 @@ function initializeGroupScrollers() {
 
     scroller.addEventListener("pointerup", stopDragging);
     scroller.addEventListener("pointercancel", stopDragging);
+
+    scroller.addEventListener(
+      "touchstart",
+      (event) => {
+        const touch = event.touches[0];
+        if (!touch) {
+          return;
+        }
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        touchStartScroll = scroller.scrollLeft;
+        horizontalTouch = false;
+      },
+      { passive: true },
+    );
+
+    scroller.addEventListener(
+      "touchmove",
+      (event) => {
+        const touch = event.touches[0];
+        if (!touch) {
+          return;
+        }
+        const deltaX = touch.clientX - touchStartX;
+        const deltaY = touch.clientY - touchStartY;
+
+        if (!horizontalTouch && Math.abs(deltaX) > 8) {
+          horizontalTouch = Math.abs(deltaX) > Math.abs(deltaY);
+        }
+        if (!horizontalTouch) {
+          return;
+        }
+
+        event.preventDefault();
+        scroller.scrollLeft = touchStartScroll - deltaX;
+      },
+      { passive: false },
+    );
+  });
+}
+
+function moveScoreScroller(scroller, direction) {
+  const cards = [...scroller.querySelectorAll(".score-card")];
+  if (cards.length === 0) {
+    return;
+  }
+
+  const currentLeft = scroller.scrollLeft;
+  const firstCardLeft = cards[0].offsetLeft;
+  const cardLeft = (card) => card.offsetLeft - firstCardLeft;
+  let targetIndex;
+
+  if (direction > 0) {
+    targetIndex = cards.findIndex(
+      (card) => cardLeft(card) > currentLeft + 8,
+    );
+    if (targetIndex === -1) {
+      targetIndex = cards.length - 1;
+    }
+  } else {
+    targetIndex = 0;
+    for (let index = cards.length - 1; index >= 0; index -= 1) {
+      if (cardLeft(cards[index]) < currentLeft - 8) {
+        targetIndex = index;
+        break;
+      }
+    }
+  }
+
+  const target = cards[targetIndex];
+  const maxScroll = scroller.scrollWidth - scroller.clientWidth;
+  scroller.scrollTo({
+    left: Math.min(maxScroll, cardLeft(target)),
+    behavior: "smooth",
   });
 }
 
@@ -705,12 +783,11 @@ elements.scoreGrid.addEventListener("click", (event) => {
     const scroller = elements.scoreGrid.querySelector(
       `[data-score-scroll="${scrollButton.dataset.scrollGroup}"]`,
     );
-    const card = scroller?.querySelector(".score-card");
-    if (scroller && card) {
-      const gap = Number.parseFloat(getComputedStyle(scroller).columnGap) || 12;
-      const distance = (card.getBoundingClientRect().width + gap) *
-        Number(scrollButton.dataset.scrollDirection);
-      scroller.scrollBy({ left: distance, behavior: "smooth" });
+    if (scroller) {
+      moveScoreScroller(
+        scroller,
+        Number(scrollButton.dataset.scrollDirection),
+      );
     }
     return;
   }
