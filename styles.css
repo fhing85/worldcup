@@ -4,7 +4,6 @@
   --blue: #1261a6;
   --red: #d32832;
   --green: #198754;
-  --green-soft: #eaf8f0;
   --paper: #f4f1e9;
   --white: #fff;
   --ink: #152230;
@@ -451,10 +450,6 @@ main {
   background: var(--navy);
 }
 
-.legend-dot.paid {
-  background: var(--green);
-}
-
 .result-groups {
   display: grid;
   gap: 32px;
@@ -626,36 +621,6 @@ main {
   background: var(--red);
 }
 
-.score-card.is-claimed {
-  color: white;
-  border-color: var(--navy);
-  background: var(--navy);
-}
-
-.score-card.is-paid {
-  color: white;
-  border-color: var(--green);
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.05), transparent 40%),
-    var(--green);
-}
-
-.score-card.is-mine::after {
-  position: absolute;
-  top: 16px;
-  right: -31px;
-  width: 110px;
-  padding: 5px 0;
-  color: var(--navy);
-  background: #f0c75e;
-  content: "MY PICK";
-  font-size: 8px;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  text-align: center;
-  transform: rotate(45deg);
-}
-
 .card-top {
   display: flex;
   align-items: center;
@@ -671,19 +636,10 @@ main {
   letter-spacing: -0.08em;
 }
 
-.is-claimed .score-number,
-.is-paid .score-number {
-  color: white;
-}
-
 .score-number i {
   margin: 0 5px;
   color: var(--red);
   font-style: normal;
-}
-
-.is-paid .score-number i {
-  color: #b9f0ce;
 }
 
 .status-tag {
@@ -694,13 +650,6 @@ main {
   background: white;
   font-size: 9px;
   font-weight: 800;
-}
-
-.is-claimed .status-tag,
-.is-paid .status-tag {
-  border-color: rgba(255, 255, 255, 0.18);
-  color: rgba(255, 255, 255, 0.78);
-  background: rgba(255, 255, 255, 0.08);
 }
 
 .claim-form {
@@ -769,11 +718,6 @@ main {
   background: #f7f8f8;
 }
 
-.participant.is-paid {
-  border-color: #9dd5b4;
-  background: var(--green-soft);
-}
-
 .participant-name {
   overflow: hidden;
   color: var(--navy);
@@ -783,33 +727,11 @@ main {
   white-space: nowrap;
 }
 
-.participant.is-paid .participant-name {
-  color: var(--green);
-}
-
-.participant-status,
-.participant-payment {
-  flex: 0 0 auto;
-  border: 0;
-  border-radius: 999px;
-  color: #7d8790;
-  background: #e8ebed;
-  font-size: 9px;
-  font-weight: 800;
-  line-height: 26px;
-  padding: 0 9px;
-}
-
 .participant-controls {
   display: flex;
   flex: 0 0 auto;
   gap: 5px;
   align-items: center;
-}
-
-.participant-payment {
-  color: white;
-  background: var(--navy);
 }
 
 .participant-cancel {
@@ -826,21 +748,6 @@ main {
 .participant-cancel:hover {
   color: white;
   background: #a82931;
-}
-
-.participant-payment:hover {
-  background: var(--blue);
-}
-
-.participant-status.is-paid,
-.participant-payment.is-paid {
-  color: white;
-  background: var(--green);
-}
-
-.participant-payment:disabled {
-  cursor: wait;
-  opacity: 0.65;
 }
 
 .add-score-panel {
@@ -1084,64 +991,6 @@ main {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.1em;
-}
-
-.payment-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 42px;
-  padding: 0 12px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.payment-switch {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-}
-
-.payment-switch input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.switch-track {
-  position: relative;
-  width: 38px;
-  height: 22px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.25);
-  transition: background 160ms ease;
-}
-
-.switch-track::after {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: white;
-  content: "";
-  transition: transform 160ms ease;
-}
-
-.payment-switch input:checked + .switch-track {
-  background: #7ce0a3;
-}
-
-.payment-switch input:checked + .switch-track::after {
-  transform: translateX(16px);
-}
-
-.payment-switch input:disabled + .switch-track {
-  opacity: 0.55;
 }
 
 .guide-section {

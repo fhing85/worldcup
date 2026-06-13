@@ -22,7 +22,6 @@ const elements = {
   cancelEntryForm: document.querySelector("#cancelEntryForm"),
   keepEntry: document.querySelector("#keepEntry"),
   claimedCount: document.querySelector("#claimedCount"),
-  paidCount: document.querySelector("#paidCount"),
   availableCount: document.querySelector("#availableCount"),
   connectionLabel: document.querySelector("#connectionLabel"),
   livePill: document.querySelector(".live-pill"),
@@ -113,20 +112,9 @@ function createLocalStorageAdapter() {
       const participantId = crypto.randomUUID();
       next.predictions[scoreKey][participantId] = {
         name,
-        paid: false,
         ownerId,
         claimedAt: Date.now(),
       };
-      writeLocalState(next);
-      return true;
-    },
-    async setPaid(scoreKey, participantId, paid) {
-      const next = normalizedLocalState();
-      const participant = next.predictions[scoreKey]?.[participantId];
-      if (!participant || participant.ownerId !== ownerId) {
-        return false;
-      }
-      next.predictions[scoreKey][participantId] = { ...participant, paid };
       writeLocalState(next);
       return true;
     },
@@ -210,24 +198,10 @@ async function createFirebaseStorageAdapter() {
       const target = databaseModule.push(scoreRef);
       await databaseModule.set(target, {
         name,
-        paid: false,
         ownerId,
         claimedAt: databaseModule.serverTimestamp(),
       });
       return true;
-    },
-    async setPaid(scoreKey, participantId, paid) {
-      const target = databaseModule.ref(
-        database,
-        `predictions/${scoreKey}/${participantId}`,
-      );
-      const result = await databaseModule.runTransaction(target, (current) => {
-        if (!current || current.ownerId !== ownerId) {
-          return;
-        }
-        return { ...current, paid };
-      });
-      return result.committed;
     },
     async cancelEntry(scoreKey, participantId) {
       const target = databaseModule.ref(
@@ -292,22 +266,7 @@ function participantList(scoreKey) {
 }
 
 function renderParticipant(participant, scoreKey) {
-  const isMine = participant.ownerId === ownerId;
-  const statusClass = participant.paid ? "is-paid" : "";
-  const paymentControl = isMine
-    ? `<button
-        type="button"
-        class="participant-payment ${statusClass}"
-        data-payment="${scoreKey}"
-        data-participant="${participant.id}"
-        data-paid="${participant.paid ? "true" : "false"}"
-      >${participant.paid ? "입금 완료" : "입금 완료하기"}</button>`
-    : `<span class="participant-status ${statusClass}">
-        ${participant.paid ? "입금 완료" : "입금 전"}
-      </span>`;
-
   const controls = `<span class="participant-controls">
-        ${paymentControl}
         <button
           type="button"
           class="participant-cancel"
@@ -318,7 +277,7 @@ function renderParticipant(participant, scoreKey) {
       </span>`;
 
   return `
-    <li class="participant ${statusClass}">
+    <li class="participant">
       <span class="participant-name">${escapeHtml(participant.name)}</span>
       ${controls}
     </li>
@@ -383,10 +342,8 @@ function renderScoreGroup(type, title, description, scores) {
 function render() {
   const scores = allScores();
   const participants = scores.flatMap((score) => participantList(score.key));
-  const paid = participants.filter((participant) => participant.paid);
 
   elements.claimedCount.textContent = participants.length;
-  elements.paidCount.textContent = paid.length;
   elements.availableCount.textContent = scores.length;
 
   const koreaWins = scores.filter((score) => score.home > score.away);
@@ -453,31 +410,6 @@ async function handleRegistration(form) {
     button.disabled = false;
     input.disabled = false;
     button.textContent = "이 스코어에 등록";
-  }
-}
-
-async function handlePayment(button) {
-  const nextPaid = button.dataset.paid !== "true";
-  button.disabled = true;
-
-  try {
-    const success = await storage.setPaid(
-      button.dataset.payment,
-      button.dataset.participant,
-      nextPaid,
-    );
-    showToast(
-      success
-        ? nextPaid
-          ? "입금 완료로 표시했습니다."
-          : "입금 완료 표시를 해제했습니다."
-        : "본인 이름의 입금 상태만 변경할 수 있습니다.",
-      success ? "success" : "error",
-    );
-  } catch (error) {
-    console.error(error);
-    showToast("입금 상태를 변경하지 못했습니다.", "error");
-    render();
   }
 }
 
@@ -658,12 +590,6 @@ elements.scoreGrid.addEventListener("submit", (event) => {
 });
 
 elements.scoreGrid.addEventListener("click", (event) => {
-  const paymentButton = event.target.closest("[data-payment]");
-  if (paymentButton) {
-    handlePayment(paymentButton);
-    return;
-  }
-
   const cancelButton = event.target.closest("[data-cancel-participant]");
   if (cancelButton) {
     openCancelEntryDialog(cancelButton);
