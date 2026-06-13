@@ -331,12 +331,56 @@ function renderScoreGroup(type, title, description, scores) {
           <span class="result-group-count">${scores.length}개 스코어</span>
           <span class="result-scroll-hint">옆으로 넘겨보세요 →</span>
         </div>
+        <div class="result-scroll-buttons" aria-label="${title} 스코어 이동">
+          <button
+            type="button"
+            class="result-scroll-button"
+            data-scroll-group="${type}"
+            data-scroll-direction="-1"
+            aria-label="${title} 이전 스코어"
+          >←</button>
+          <button
+            type="button"
+            class="result-scroll-button"
+            data-scroll-group="${type}"
+            data-scroll-direction="1"
+            aria-label="${title} 다음 스코어"
+          >→</button>
+        </div>
       </header>
-      <div class="result-score-grid">
+      <div class="result-score-grid" data-score-scroll="${type}">
         ${scores.map(renderScoreCard).join("")}
+      </div>
+      <div class="result-scroll-track" aria-hidden="true">
+        <span class="result-scroll-progress" data-scroll-progress="${type}"></span>
       </div>
     </section>
   `;
+}
+
+function updateScrollProgress(scroller) {
+  const type = scroller.dataset.scoreScroll;
+  const progress = elements.scoreGrid.querySelector(
+    `[data-scroll-progress="${type}"]`,
+  );
+  if (!progress) {
+    return;
+  }
+
+  const maxScroll = scroller.scrollWidth - scroller.clientWidth;
+  const visibleRatio = Math.min(1, scroller.clientWidth / scroller.scrollWidth);
+  const progressRatio = maxScroll > 0 ? scroller.scrollLeft / maxScroll : 0;
+  const thumbWidth = Math.max(18, visibleRatio * 100);
+  const travel = 100 - thumbWidth;
+
+  progress.style.width = `${thumbWidth}%`;
+  progress.style.left = `${progressRatio * travel}%`;
+}
+
+function initializeGroupScrollers() {
+  elements.scoreGrid.querySelectorAll("[data-score-scroll]").forEach((scroller) => {
+    updateScrollProgress(scroller);
+  });
 }
 
 function render() {
@@ -370,6 +414,7 @@ function render() {
       mexicoWins,
     ),
   ].join("");
+  requestAnimationFrame(initializeGroupScrollers);
 }
 
 function showToast(message, type = "success") {
@@ -590,11 +635,38 @@ elements.scoreGrid.addEventListener("submit", (event) => {
 });
 
 elements.scoreGrid.addEventListener("click", (event) => {
+  const scrollButton = event.target.closest("[data-scroll-group]");
+  if (scrollButton) {
+    const scroller = elements.scoreGrid.querySelector(
+      `[data-score-scroll="${scrollButton.dataset.scrollGroup}"]`,
+    );
+    const card = scroller?.querySelector(".score-card");
+    if (scroller && card) {
+      const gap = Number.parseFloat(getComputedStyle(scroller).columnGap) || 12;
+      const distance = (card.getBoundingClientRect().width + gap) *
+        Number(scrollButton.dataset.scrollDirection);
+      scroller.scrollBy({ left: distance, behavior: "smooth" });
+    }
+    return;
+  }
+
   const cancelButton = event.target.closest("[data-cancel-participant]");
   if (cancelButton) {
     openCancelEntryDialog(cancelButton);
   }
 });
+
+elements.scoreGrid.addEventListener(
+  "scroll",
+  (event) => {
+    if (event.target.matches("[data-score-scroll]")) {
+      updateScrollProgress(event.target);
+    }
+  },
+  true,
+);
+
+window.addEventListener("resize", initializeGroupScrollers);
 
 elements.addScoreForm.addEventListener("submit", (event) => {
   event.preventDefault();
