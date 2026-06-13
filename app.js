@@ -368,7 +368,10 @@ function renderScoreGroup(type, title, description, scores) {
           <p>${description}</p>
           <h3 id="group-${type}">${title}</h3>
         </div>
-        <span class="result-group-count">${scores.length}개 스코어</span>
+        <div class="result-group-meta">
+          <span class="result-group-count">${scores.length}개 스코어</span>
+          <span class="result-scroll-hint">옆으로 넘겨보세요 →</span>
+        </div>
       </header>
       <div class="result-score-grid">
         ${scores.map(renderScoreCard).join("")}

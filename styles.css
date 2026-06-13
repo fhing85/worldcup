@@ -506,6 +506,18 @@ main {
   font-weight: 800;
 }
 
+.result-group-meta {
+  display: grid;
+  gap: 5px;
+  justify-items: end;
+}
+
+.result-scroll-hint {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+}
+
 .result-group-korea {
   border-color: #a9cbe5;
   background: linear-gradient(135deg, #edf7ff, rgba(255, 255, 255, 0.7));
@@ -534,9 +546,34 @@ main {
 }
 
 .result-score-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
   gap: 12px;
+  padding: 2px 2px 14px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-padding-inline: 2px;
+  scroll-snap-type: x proximity;
+  scrollbar-color: rgba(8, 29, 53, 0.28) transparent;
+  scrollbar-width: thin;
+}
+
+.result-score-grid::-webkit-scrollbar {
+  height: 7px;
+}
+
+.result-score-grid::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(8, 29, 53, 0.06);
+}
+
+.result-score-grid::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(8, 29, 53, 0.24);
+}
+
+.result-score-grid .score-card {
+  flex: 0 0 min(310px, calc((100vw - 96px) / 3));
+  scroll-snap-align: start;
 }
 
 .score-card {
@@ -1190,8 +1227,8 @@ footer strong {
 }
 
 @media (max-width: 900px) {
-  .result-score-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .result-score-grid .score-card {
+    flex-basis: min(320px, calc((100vw - 76px) / 2));
   }
 
   .countdown-panel {
@@ -1293,16 +1330,33 @@ footer strong {
   }
 
   .result-group-count {
-    grid-column: 2;
-    justify-self: start;
+    justify-self: end;
   }
 
   .result-group-header h3 {
     font-size: 21px;
   }
 
+  .result-group-meta {
+    grid-column: 2;
+    justify-items: start;
+  }
+
+  .result-group-count {
+    justify-self: start;
+  }
+
+  .result-scroll-hint {
+    color: var(--blue);
+  }
+
   .result-score-grid {
-    grid-template-columns: 1fr;
+    margin-right: -15px;
+    padding-right: 34px;
+  }
+
+  .result-score-grid .score-card {
+    flex-basis: min(82vw, 310px);
   }
 
   .score-card {
