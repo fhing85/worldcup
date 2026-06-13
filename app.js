@@ -7,7 +7,6 @@ const DEFAULT_SCORES = Array.from({ length: 4 }, (_, homeIndex) =>
   })),
 ).flat();
 
-const MATCH_TIME = new Date("2026-06-19T10:00:00+09:00");
 const LOCAL_STORAGE_KEY = "civil-office-worldcup-multi-predictions-v2";
 const LOCAL_OWNER_KEY = "civil-office-worldcup-owner-v1";
 
@@ -21,11 +20,13 @@ const elements = {
   cancelEntryDialog: document.querySelector("#cancelEntryDialog"),
   cancelEntryForm: document.querySelector("#cancelEntryForm"),
   keepEntry: document.querySelector("#keepEntry"),
+  registerDialog: document.querySelector("#registerDialog"),
+  registerForm: document.querySelector("#registerForm"),
+  registerScore: document.querySelector("#registerScore"),
+  cancelRegister: document.querySelector("#cancelRegister"),
   claimedCount: document.querySelector("#claimedCount"),
   availableCount: document.querySelector("#availableCount"),
   connectionLabel: document.querySelector("#connectionLabel"),
-  livePill: document.querySelector(".live-pill"),
-  countdown: document.querySelector("#countdown"),
   toast: document.querySelector("#toast"),
 };
 
@@ -34,6 +35,7 @@ let ownerId = "";
 let storage = null;
 let toastTimer = null;
 let cancelTarget = null;
+let registerTarget = null;
 
 function hasFirebaseConfig() {
   const config = window.FIREBASE_CONFIG;
@@ -273,7 +275,8 @@ function renderParticipant(participant, scoreKey) {
           data-cancel-score="${scoreKey}"
           data-cancel-participant="${participant.id}"
           data-cancel-name="${escapeHtml(participant.name)}"
-        >등록 취소</button>
+          aria-label="${escapeHtml(participant.name)} 등록 취소"
+        >×</button>
       </span>`;
 
   return `
@@ -288,242 +291,50 @@ function renderScoreCard(score) {
   const people = participantList(score.key);
 
   return `
-    <article class="score-card ${people.length ? "has-participants" : ""}" data-score="${score.key}">
-      <div class="card-top">
-        <div class="score-number">${score.home}<i>:</i>${score.away}</div>
-        <span class="status-tag">${people.length}명 참여</span>
-      </div>
+    <article class="score-card" data-score="${score.key}">
+      <button
+        type="button"
+        class="score-button ${people.length ? "has-participants" : ""}"
+        data-register-score="${score.key}"
+        data-register-home="${score.home}"
+        data-register-away="${score.away}"
+      >
+        ${score.home} : ${score.away}
+        <small>${people.length ? `${people.length}명 참여` : "이름 등록"}</small>
+      </button>
       ${
         people.length
           ? `<ul class="participant-list">${people
               .map((person) => renderParticipant(person, score.key))
               .join("")}</ul>`
-          : `<p class="empty-participants">아직 참여자가 없습니다.</p>`
+          : ""
       }
-      <form class="claim-form" data-score="${score.key}">
-        <label class="sr-only" for="name-${score.key}">이름</label>
-        <input
-          id="name-${score.key}"
-          class="name-input"
-          name="name"
-          type="text"
-          maxlength="12"
-          placeholder="이름을 입력하세요"
-          autocomplete="name"
-          required
-        />
-        <button class="claim-button" type="submit">이 스코어에 등록</button>
-      </form>
     </article>
   `;
 }
 
 function renderScoreGroup(type, title, description, scores) {
   return `
-    <section class="result-group result-group-${type}" aria-labelledby="group-${type}">
+    <section
+      class="result-group result-group-${type}"
+      data-result-section="${type}"
+      aria-labelledby="group-${type}"
+    >
       <header class="result-group-header">
-        <div class="result-group-mark" aria-hidden="true"></div>
-        <div>
+        <div class="result-group-title">
+          <span class="result-group-mark" aria-hidden="true"></span>
           <p>${description}</p>
           <h3 id="group-${type}">${title}</h3>
         </div>
         <div class="result-group-meta">
           <span class="result-group-count">${scores.length}개 스코어</span>
-          <span class="result-scroll-hint">옆으로 넘겨보세요 →</span>
-        </div>
-        <div class="result-scroll-buttons" aria-label="${title} 스코어 이동">
-          <button
-            type="button"
-            class="result-scroll-button"
-            data-scroll-group="${type}"
-            data-scroll-direction="-1"
-            aria-label="${title} 이전 스코어"
-          >←</button>
-          <button
-            type="button"
-            class="result-scroll-button"
-            data-scroll-group="${type}"
-            data-scroll-direction="1"
-            aria-label="${title} 다음 스코어"
-          >→</button>
         </div>
       </header>
-      <div class="result-score-grid" data-score-scroll="${type}">
+      <div class="result-score-grid">
         ${scores.map(renderScoreCard).join("")}
-      </div>
-      <div class="result-scroll-track" aria-hidden="true">
-        <span class="result-scroll-progress" data-scroll-progress="${type}"></span>
       </div>
     </section>
   `;
-}
-
-function updateScrollProgress(scroller) {
-  const type = scroller.dataset.scoreScroll;
-  const progress = elements.scoreGrid.querySelector(
-    `[data-scroll-progress="${type}"]`,
-  );
-  if (!progress) {
-    return;
-  }
-
-  const maxScroll = scroller.scrollWidth - scroller.clientWidth;
-  const visibleRatio = Math.min(1, scroller.clientWidth / scroller.scrollWidth);
-  const progressRatio = maxScroll > 0 ? scroller.scrollLeft / maxScroll : 0;
-  const thumbWidth = Math.max(18, visibleRatio * 100);
-  const travel = 100 - thumbWidth;
-
-  progress.style.width = `${thumbWidth}%`;
-  progress.style.left = `${progressRatio * travel}%`;
-}
-
-function initializeGroupScrollers() {
-  elements.scoreGrid.querySelectorAll("[data-score-scroll]").forEach((scroller) => {
-    updateScrollProgress(scroller);
-    if (scroller.dataset.scrollReady === "true") {
-      return;
-    }
-    scroller.dataset.scrollReady = "true";
-
-    scroller.addEventListener(
-      "wheel",
-      (event) => {
-        const maxScroll = scroller.scrollWidth - scroller.clientWidth;
-        if (maxScroll <= 0) {
-          return;
-        }
-
-        const delta =
-          Math.abs(event.deltaX) > Math.abs(event.deltaY)
-            ? event.deltaX
-            : event.deltaY;
-        const movingLeft = delta < 0 && scroller.scrollLeft > 0;
-        const movingRight = delta > 0 && scroller.scrollLeft < maxScroll;
-
-        if (movingLeft || movingRight) {
-          event.preventDefault();
-          scroller.scrollLeft += delta;
-        }
-      },
-      { passive: false },
-    );
-
-    let dragStartX = 0;
-    let dragStartScroll = 0;
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let touchStartScroll = 0;
-    let horizontalTouch = false;
-
-    scroller.addEventListener("pointerdown", (event) => {
-      if (
-        event.pointerType !== "mouse" ||
-        event.button !== 0 ||
-        event.target.closest("button, input, label")
-      ) {
-        return;
-      }
-      dragStartX = event.clientX;
-      dragStartScroll = scroller.scrollLeft;
-      scroller.dataset.dragging = "true";
-      scroller.setPointerCapture(event.pointerId);
-    });
-
-    scroller.addEventListener("pointermove", (event) => {
-      if (scroller.dataset.dragging !== "true") {
-        return;
-      }
-      event.preventDefault();
-      scroller.scrollLeft = dragStartScroll - (event.clientX - dragStartX);
-    });
-
-    const stopDragging = (event) => {
-      if (scroller.dataset.dragging !== "true") {
-        return;
-      }
-      scroller.dataset.dragging = "false";
-      if (scroller.hasPointerCapture(event.pointerId)) {
-        scroller.releasePointerCapture(event.pointerId);
-      }
-    };
-
-    scroller.addEventListener("pointerup", stopDragging);
-    scroller.addEventListener("pointercancel", stopDragging);
-
-    scroller.addEventListener(
-      "touchstart",
-      (event) => {
-        const touch = event.touches[0];
-        if (!touch) {
-          return;
-        }
-        touchStartX = touch.clientX;
-        touchStartY = touch.clientY;
-        touchStartScroll = scroller.scrollLeft;
-        horizontalTouch = false;
-      },
-      { passive: true },
-    );
-
-    scroller.addEventListener(
-      "touchmove",
-      (event) => {
-        const touch = event.touches[0];
-        if (!touch) {
-          return;
-        }
-        const deltaX = touch.clientX - touchStartX;
-        const deltaY = touch.clientY - touchStartY;
-
-        if (!horizontalTouch && Math.abs(deltaX) > 8) {
-          horizontalTouch = Math.abs(deltaX) > Math.abs(deltaY);
-        }
-        if (!horizontalTouch) {
-          return;
-        }
-
-        event.preventDefault();
-        scroller.scrollLeft = touchStartScroll - deltaX;
-      },
-      { passive: false },
-    );
-  });
-}
-
-function moveScoreScroller(scroller, direction) {
-  const cards = [...scroller.querySelectorAll(".score-card")];
-  if (cards.length === 0) {
-    return;
-  }
-
-  const currentLeft = scroller.scrollLeft;
-  const firstCardLeft = cards[0].offsetLeft;
-  const cardLeft = (card) => card.offsetLeft - firstCardLeft;
-  let targetIndex;
-
-  if (direction > 0) {
-    targetIndex = cards.findIndex(
-      (card) => cardLeft(card) > currentLeft + 8,
-    );
-    if (targetIndex === -1) {
-      targetIndex = cards.length - 1;
-    }
-  } else {
-    targetIndex = 0;
-    for (let index = cards.length - 1; index >= 0; index -= 1) {
-      if (cardLeft(cards[index]) < currentLeft - 8) {
-        targetIndex = index;
-        break;
-      }
-    }
-  }
-
-  const target = cards[targetIndex];
-  const maxScroll = scroller.scrollWidth - scroller.clientWidth;
-  scroller.scrollTo({
-    left: Math.min(maxScroll, cardLeft(target)),
-    behavior: "smooth",
-  });
 }
 
 function render() {
@@ -557,7 +368,6 @@ function render() {
       mexicoWins,
     ),
   ].join("");
-  requestAnimationFrame(initializeGroupScrollers);
 }
 
 function showToast(message, type = "success") {
@@ -570,7 +380,7 @@ function showToast(message, type = "success") {
 }
 
 async function handleRegistration(form) {
-  const button = form.querySelector("button");
+  const button = form.querySelector('[type="submit"]');
   const input = form.elements.name;
   const name = input.value.trim();
 
@@ -585,20 +395,39 @@ async function handleRegistration(form) {
   button.textContent = "등록 중...";
 
   try {
-    const success = await storage.register(form.dataset.score, name);
+    const success = await storage.register(registerTarget.scoreKey, name);
     showToast(
       success
         ? `${name}님의 예상이 등록되었습니다.`
         : "등록하지 못했습니다.",
       success ? "success" : "error",
     );
+    if (success) {
+      elements.registerDialog.close();
+      form.reset();
+      registerTarget = null;
+    }
   } catch (error) {
     console.error(error);
     showToast("등록하지 못했습니다. 잠시 후 다시 시도해 주세요.", "error");
+  } finally {
     button.disabled = false;
     input.disabled = false;
-    button.textContent = "이 스코어에 등록";
+    button.textContent = "이름 등록";
   }
+}
+
+function openRegisterDialog(button) {
+  registerTarget = {
+    scoreKey: button.dataset.registerScore,
+    home: button.dataset.registerHome,
+    away: button.dataset.registerAway,
+  };
+  elements.registerScore.textContent =
+    `${registerTarget.home} : ${registerTarget.away}`;
+  elements.registerForm.reset();
+  elements.registerDialog.showModal();
+  elements.registerForm.elements.name.focus();
 }
 
 function openCancelEntryDialog(button) {
@@ -717,20 +546,6 @@ async function handleReset(form) {
   }
 }
 
-function updateCountdown() {
-  const distance = MATCH_TIME.getTime() - Date.now();
-  if (distance <= 0) {
-    elements.countdown.textContent = "경기가 시작되었습니다";
-    return;
-  }
-
-  const days = Math.floor(distance / 86_400_000);
-  const hours = Math.floor((distance % 86_400_000) / 3_600_000);
-  const minutes = Math.floor((distance % 3_600_000) / 60_000);
-  const seconds = Math.floor((distance % 60_000) / 1_000);
-  elements.countdown.textContent = `${days}일 ${String(hours).padStart(2, "0")}시간 ${String(minutes).padStart(2, "0")}분 ${String(seconds).padStart(2, "0")}초`;
-}
-
 async function initialize() {
   try {
     if (hasFirebaseConfig()) {
@@ -753,14 +568,12 @@ async function initialize() {
       state = nextState;
       if (storage.mode === "firebase") {
         elements.connectionLabel.textContent = "실시간 공동 저장";
-        elements.livePill.classList.add("online");
       }
       render();
     },
     (error) => {
       console.error(error);
       elements.connectionLabel.textContent = "공동 저장 권한 오류";
-      elements.livePill.classList.remove("online");
       showToast(
         "Firebase Realtime Database 규칙을 확인해 주세요.",
         "error",
@@ -769,26 +582,10 @@ async function initialize() {
   );
 }
 
-elements.scoreGrid.addEventListener("submit", (event) => {
-  if (!event.target.matches(".claim-form")) {
-    return;
-  }
-  event.preventDefault();
-  handleRegistration(event.target);
-});
-
 elements.scoreGrid.addEventListener("click", (event) => {
-  const scrollButton = event.target.closest("[data-scroll-group]");
-  if (scrollButton) {
-    const scroller = elements.scoreGrid.querySelector(
-      `[data-score-scroll="${scrollButton.dataset.scrollGroup}"]`,
-    );
-    if (scroller) {
-      moveScoreScroller(
-        scroller,
-        Number(scrollButton.dataset.scrollDirection),
-      );
-    }
+  const registerButton = event.target.closest("[data-register-score]");
+  if (registerButton) {
+    openRegisterDialog(registerButton);
     return;
   }
 
@@ -797,18 +594,6 @@ elements.scoreGrid.addEventListener("click", (event) => {
     openCancelEntryDialog(cancelButton);
   }
 });
-
-elements.scoreGrid.addEventListener(
-  "scroll",
-  (event) => {
-    if (event.target.matches("[data-score-scroll]")) {
-      updateScrollProgress(event.target);
-    }
-  },
-  true,
-);
-
-window.addEventListener("resize", initializeGroupScrollers);
 
 elements.addScoreForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -836,6 +621,14 @@ elements.cancelEntryForm.addEventListener("submit", (event) => {
   handleCancelEntry(event.target);
 });
 
-updateCountdown();
-setInterval(updateCountdown, 1000);
+elements.registerForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  handleRegistration(event.target);
+});
+
+elements.cancelRegister.addEventListener("click", () => {
+  registerTarget = null;
+  elements.registerDialog.close();
+});
+
 initialize();

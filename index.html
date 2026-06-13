@@ -3,219 +3,139 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="토목사업소 대한민국 대 멕시코 경기 결과 예측"
-    />
-    <title>대한민국 vs 멕시코 | 결과 예측</title>
+    <meta name="description" content="대한민국 대 멕시코 경기 결과 예측" />
+    <title>대한민국 : 멕시코 결과 예측</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800;900&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20260613-16" />
+    <link rel="stylesheet" href="styles.css?v=20260613-18" />
   </head>
   <body>
-    <div class="page-shell">
-      <header class="hero">
-        <nav class="topbar" aria-label="상단 정보">
-          <div class="department-mark">
-            <span class="mark-lines" aria-hidden="true"></span>
-            <span>토목사업소</span>
-          </div>
-          <div class="live-pill">
-            <span class="live-dot" aria-hidden="true"></span>
-            <span id="connectionLabel">저장 방식 확인 중</span>
-          </div>
-        </nav>
-
-        <div class="hero-content">
-          <p class="eyebrow">2026 월드컵 조별예선 · 부서 이벤트</p>
-          <h1>우리의 예측,<br /><span>하나의 스코어</span></h1>
-          <p class="hero-copy">
-            먼저 경기 결과를 예상한 뒤<br class="desktop-only" />
-            해당 영역에서 최종 스코어를 선택해 주세요.
-          </p>
-
-          <div class="match-card">
-            <div class="team">
-              <div class="flag flag-korea" aria-label="대한민국 국기">
-                <span class="taegeuk"></span>
-              </div>
-              <div>
-                <strong>대한민국</strong>
-                <span>KOREA REPUBLIC</span>
-              </div>
-            </div>
-
-            <div class="versus">
-              <span>2026. 06. 19. 금</span>
-              <strong>10:00</strong>
-              <em>VS</em>
-            </div>
-
-            <div class="team team-away">
-              <div class="flag flag-mexico" aria-label="멕시코 국기">
-                <i></i><i></i><i></i>
-              </div>
-              <div>
-                <strong>멕시코</strong>
-                <span>MEXICO</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="countdown-panel" aria-live="polite">
-            <span class="countdown-label">경기 시작까지</span>
-            <div id="countdown" class="countdown">계산 중...</div>
-          </div>
+    <main class="app">
+      <header class="app-header">
+        <div class="header-line">
+          <h1>월드컵 결과 예측</h1>
+          <span id="connectionLabel" class="connection">연결 중</span>
+        </div>
+        <div class="match-title">
+          <strong>대한민국</strong>
+          <span>:</span>
+          <strong>멕시코</strong>
+        </div>
+        <div class="status-board">
+          <span>참가 인원</span>
+          <strong id="claimedCount">0</strong>
+          <span>명</span>
+          <span class="score-count">스코어 <b id="availableCount">16</b>개</span>
         </div>
       </header>
 
-      <main>
-        <section class="prediction-section" aria-labelledby="predictionTitle">
-          <div class="section-heading">
-            <div>
-              <p class="section-kicker">SCORE PREDICTION</p>
-              <h2 id="predictionTitle">경기 결과부터 선택하세요</h2>
-              <p>대한민국 승리, 무승부, 멕시코 승리 영역에서 예상 스코어를 고르세요.</p>
-            </div>
-            <div class="summary" aria-label="참여 현황">
-              <div>
-                <strong id="claimedCount">0</strong>
-                <span>참여</span>
-              </div>
-              <div>
-                <strong id="availableCount">16</strong>
-                <span>스코어 행</span>
-              </div>
-            </div>
-          </div>
+      <section
+        id="scoreGrid"
+        class="score-sections"
+        aria-label="예상 스코어"
+        aria-live="polite"
+      ></section>
 
-          <div class="legend">
-            <span><i class="legend-dot available"></i>참여 가능</span>
-            <span><i class="legend-dot claimed"></i>참여자 등록</span>
-          </div>
+      <section class="management">
+        <form id="addScoreForm" class="add-score-form">
+          <h2>스코어 추가</h2>
+          <label>
+            <span>대한민국</span>
+            <input
+              name="homeScore"
+              type="number"
+              min="0"
+              max="99"
+              inputmode="numeric"
+              required
+            />
+          </label>
+          <b>:</b>
+          <label>
+            <span>멕시코</span>
+            <input
+              name="awayScore"
+              type="number"
+              min="0"
+              max="99"
+              inputmode="numeric"
+              required
+            />
+          </label>
+          <button type="submit">추가</button>
+        </form>
 
-          <div id="scoreGrid" class="result-groups" aria-live="polite"></div>
+        <button id="resetButton" class="reset-button" type="button">
+          전체 초기화
+        </button>
+      </section>
 
-          <section class="add-score-panel" aria-labelledby="addScoreTitle">
-            <div>
-              <p class="section-kicker">ADD SCORE ROW</p>
-              <h3 id="addScoreTitle">원하는 예상치가 없나요?</h3>
-              <p>새 예상 스코어 행을 추가할 수 있습니다. 추가된 행은 삭제되지 않습니다.</p>
-            </div>
-            <form id="addScoreForm" class="add-score-form">
-              <label>
-                <span>대한민국</span>
-                <input
-                  name="homeScore"
-                  type="number"
-                  min="0"
-                  max="99"
-                  inputmode="numeric"
-                  required
-                />
-              </label>
-              <b>:</b>
-              <label>
-                <span>멕시코</span>
-                <input
-                  name="awayScore"
-                  type="number"
-                  min="0"
-                  max="99"
-                  inputmode="numeric"
-                  required
-                />
-              </label>
-              <button type="submit">행 추가</button>
-            </form>
-          </section>
-
-          <section class="reset-panel" aria-labelledby="resetTitle">
-            <div>
-              <p class="section-kicker">TEST RESET</p>
-              <h3 id="resetTitle">테스트 데이터 초기화</h3>
-              <p>기본 16개 스코어는 유지하고 등록 이름과 추가 행을 초기화합니다.</p>
-            </div>
-            <button id="resetButton" type="button">초기화</button>
-          </section>
-        </section>
-
-        <section class="guide-section">
-          <p class="section-kicker">HOW TO JOIN</p>
-          <h2>참여 방법</h2>
-          <div class="guide-grid">
-            <article>
-              <span>01</span>
-              <h3>스코어 고르기</h3>
-              <p>원하는 예상 스코어를 고릅니다. 같은 칸에 여러 명이 참여할 수 있습니다.</p>
-            </article>
-            <article>
-              <span>02</span>
-              <h3>이름 등록하기</h3>
-              <p>본인 이름을 입력하고 등록 버튼을 누릅니다.</p>
-            </article>
-            <article>
-              <span>03</span>
-              <h3>함께 응원하기</h3>
-              <p>같은 스코어를 선택한 동료들과 함께 경기를 응원합니다.</p>
-            </article>
-          </div>
-        </section>
-      </main>
-
-      <footer>
-        <strong>토목사업소</strong>
-        <span>함께 예측하고, 함께 응원합니다. · v16</span>
-      </footer>
-    </div>
+      <footer>v18</footer>
+    </main>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-    <dialog id="resetDialog" class="reset-dialog">
-      <form id="resetForm">
-        <p class="dialog-kicker">RESET DATA</p>
-        <h2>테스트 데이터를 초기화할까요?</h2>
-        <p>초기화 비밀번호를 입력해 주세요.</p>
-        <label>
-          <span class="sr-only">초기화 비밀번호</span>
-          <input
-            name="password"
-            type="password"
-            inputmode="numeric"
-            autocomplete="off"
-            placeholder="비밀번호"
-            required
-          />
-        </label>
-        <div class="dialog-actions">
-          <button id="cancelReset" type="button" class="button-secondary">돌아가기</button>
-          <button type="submit" class="button-danger">초기화 실행</button>
+    <dialog id="registerDialog" class="modal">
+      <form id="registerForm">
+        <p class="modal-label">참여하기</p>
+        <h2><span id="registerScore">0 : 0</span> 예상</h2>
+        <input
+          name="name"
+          type="text"
+          maxlength="12"
+          autocomplete="name"
+          placeholder="이름을 입력하세요"
+          required
+        />
+        <div class="modal-actions">
+          <button id="cancelRegister" type="button" class="button-secondary">
+            돌아가기
+          </button>
+          <button type="submit" class="button-primary">이름 등록</button>
         </div>
       </form>
     </dialog>
 
-    <dialog id="cancelEntryDialog" class="reset-dialog">
+    <dialog id="resetDialog" class="modal">
+      <form id="resetForm">
+        <p class="modal-label">전체 초기화</p>
+        <h2>모든 참여 기록을 지울까요?</h2>
+        <input
+          name="password"
+          type="password"
+          inputmode="numeric"
+          autocomplete="off"
+          placeholder="비밀번호"
+          required
+        />
+        <div class="modal-actions">
+          <button id="cancelReset" type="button" class="button-secondary">
+            돌아가기
+          </button>
+          <button type="submit" class="button-danger">초기화</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="cancelEntryDialog" class="modal">
       <form id="cancelEntryForm">
-        <p class="dialog-kicker">CANCEL ENTRY</p>
-        <h2>이 등록을 취소할까요?</h2>
-        <p>
-          선택한 이름만 삭제됩니다. 같은 스코어의 다른 참가자는
-          유지됩니다.
-        </p>
-        <div class="dialog-actions">
+        <p class="modal-label">등록 취소</p>
+        <h2>이 이름을 삭제할까요?</h2>
+        <p>선택한 참여 기록만 삭제됩니다.</p>
+        <div class="modal-actions">
           <button id="keepEntry" type="button" class="button-secondary">
             돌아가기
           </button>
-          <button type="submit" class="button-danger">등록 취소</button>
+          <button type="submit" class="button-danger">삭제</button>
         </div>
       </form>
     </dialog>
 
-    <script src="firebase-config.js?v=20260613-16"></script>
-    <script type="module" src="app.js?v=20260613-16"></script>
+    <script src="firebase-config.js?v=20260613-18"></script>
+    <script type="module" src="app.js?v=20260613-18"></script>
   </body>
 </html>
